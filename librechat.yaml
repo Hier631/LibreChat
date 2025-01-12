@@ -7,6 +7,9 @@ version: 1.2.1
 # Cache settings: Set to true to enable caching
 cache: true
 
+# Whether or not to secure access to image links that are hosted locally by the app. Default: false.
+secureImageLinks: true
+
 # Custom interface configuration
 interface:
   # Privacy policy settings
