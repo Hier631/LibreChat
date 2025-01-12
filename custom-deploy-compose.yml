@@ -1,3 +1,16 @@
+secrets:
+  nginx_email:
+    file: $SECRETSDIR/nginx_email
+  nginx_password:
+    file: $SECRETSDIR/nginx_password
+  
+  postgres_db:
+    file: $SECRETSDIR/postgres_db
+  postgres_user:
+    file: $SECRETSDIR/postgres_user
+  postgres_password:
+    file: $SECRETSDIR/postgres_password
+
 services:
   api:
     image: ghcr.io/danny-avila/librechat-dev-api:latest
@@ -35,9 +48,12 @@ services:
       - "127.0.0.1:81:81"
     depends_on:
       - api
+    secrets:
+      - nginx_email
+      - nginx_password
     environment:
-      - INITIAL_ADMIN_EMAIL: my@example.com
-      - INITIAL_ADMIN_PASSWORD: mypassword1
+      - INITIAL_ADMIN_EMAIL__FILE: /run/secrets/nginx_email
+      - INITIAL_ADMIN_PASSWORD__FILE: /run/secrets/nginx_password
       - DISABLE_IPV6: 'true'
     volumes:
       - ./data:/data
@@ -47,11 +63,9 @@ services:
     container_name: chat-mongodb
     image: mongo
     restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - ./data-node:/data/db
+    command: mongod --noauth
   
   meilisearch:
     container_name: chat-meilisearch
@@ -67,10 +81,14 @@ services:
 
     vectordb:
       image: ankane/pgvector:latest
+      secrets:
+        - postgres_db
+        - postgres_user
+        - postgres_password
       environment:
-        POSTGRES_DB: mydatabase
-        POSTGRES_USER: myuser
-        POSTGRES_PASSWORD: mypassword
+        POSTGRES_DB_FILE: /run/secrets/postgres_db
+        POSTGRES_USER_FILE: /run/secrets/postgres_user
+        POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       restart: unless-stopped
       volumes:
         - pgdata2:/var/lib/postgresql/data
