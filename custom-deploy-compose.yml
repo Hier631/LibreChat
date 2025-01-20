@@ -15,7 +15,8 @@ services:
   api:
     image: ghcr.io/danny-avila/librechat-dev-api:latest
     container_name: LibreChat-API
-    ports: "127.0.0.1:3080:3080"
+    ports:
+      - "127.0.0.1:3080:3080"
     depends_on:
       - mongodb
       - rag_api
@@ -45,16 +46,16 @@ services:
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
-      - "127.0.0.1:81:81"
+      - "10.6.3.1:81:81"
     depends_on:
       - api
     secrets:
       - nginx_email
       - nginx_password
     environment:
-      - INITIAL_ADMIN_EMAIL__FILE: /run/secrets/nginx_email
-      - INITIAL_ADMIN_PASSWORD__FILE: /run/secrets/nginx_password
-      - DISABLE_IPV6: 'true'
+      INITIAL_ADMIN_EMAIL__FILE: /run/secrets/nginx_email
+      INITIAL_ADMIN_PASSWORD__FILE: /run/secrets/nginx_password
+      DISABLE_IPV6: 'true'
     volumes:
       - ./data:/data
       - ./letsencrypt:/etc/letsencrypt
@@ -79,30 +80,30 @@ services:
     volumes:
       - ./meili_data_v1.7:/meili_data
 
-    vectordb:
-      image: ankane/pgvector:latest
-      secrets:
-        - postgres_db
-        - postgres_user
-        - postgres_password
-      environment:
-        POSTGRES_DB_FILE: /run/secrets/postgres_db
-        POSTGRES_USER_FILE: /run/secrets/postgres_user
-        POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      restart: unless-stopped
-      volumes:
-        - pgdata2:/var/lib/postgresql/data
+  vectordb:
+    image: ankane/pgvector:latest
+    secrets:
+      - postgres_db
+      - postgres_user
+      - postgres_password
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    restart: unless-stopped
+    volumes:
+      - pgdata2:/var/lib/postgresql/data
 
-    rag_api:
-      image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
-      environment:
-        - DB_HOST=vectordb
-        - RAG_PORT=${RAG_PORT:-8000}
-      restart: unless-stopped
-      depends_on:
-        - vectordb
-      env_file:
-        - .env
+  rag_api:
+    image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+    environment:
+      - DB_HOST=vectordb
+      - RAG_PORT=${RAG_PORT:-8000}
+    restart: unless-stopped
+    depends_on:
+      - vectordb
+    env_file:
+      - .env
   
-  volumes:
-    pgdata2:
+volumes:
+  pgdata2:
