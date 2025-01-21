@@ -1,4 +1,9 @@
 secrets:
+  mongo_express_user:
+    file: $SECRETSDIR/mongo_express_user
+  mongo_express_password:
+    file: $SECRETSDIR/mongo_express_password
+
   nginx_email:
     file: $SECRETSDIR/nginx_email
   nginx_password:
@@ -67,7 +72,28 @@ services:
     volumes:
       - ./data-node:/data/db
     command: mongod --noauth
-  
+
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "10.6.3.1:8081:8081"
+    secrets:
+      - mongo_express_user
+      - mongo_express_password
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+      ME_CONFIG_SITE_COOKIESECRET: ${ME_CONFIG_SITE_COOKIESECRET}
+      ME_CONFIG_SITE_SESSIONSECRET: ${ME_CONFIG_SITE_SESSIONSECRET}
+      ME_CONFIG_BASICAUTH_ENABLED: true
+      ME_CONFIG_BASICAUTH_USERNAME_FILE: /run/secrets/mongo_express_user
+      ME_CONFIG_BASICAUTH_PASSWORD_FILE: /run/secrets/mongo_express_password
+      PORT: 8081
+      VCAP_APP_HOST: 0.0.0.0
+
   meilisearch:
     container_name: chat-meilisearch
     image: getmeili/meilisearch:v1.7.3
